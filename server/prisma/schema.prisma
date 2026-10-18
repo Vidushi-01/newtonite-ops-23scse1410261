@@ -1,0 +1,44 @@
+<escape>generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  name         String
+  email        String     @unique
+  passwordHash String
+  role         String     @default("Member")
+  createdAt    DateTime   @default(now())
+  workItems    WorkItem[] @relation("Assignee")
+  activities   Activity[]
+}
+
+model WorkItem {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String     @default("")
+  status      String     @default("Open")
+  priority    String     @default("Medium")
+  version     Int        @default(1)
+  assigneeId  Int?
+  assignee    User?      @relation("Assignee", fields: [assigneeId], references: [id])
+  activities  Activity[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Activity {
+  id         Int      @id @default(autoincrement())
+  workItemId Int
+  userId     Int?
+  action     String
+  details    String
+  createdAt  DateTime @default(now())
+  workItem   WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id])
+}</escape>
