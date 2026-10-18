@@ -27,16 +27,31 @@ router.get("/", (req, res) => {
     Math.max(1, Number(req.query.limit) || 10)
   );
 
+  const search = String(req.query.search || "").trim().toLowerCase();
+  const status = String(req.query.status || "");
+  const priority = String(req.query.priority || "");
+
+  const filteredItems = workItems.filter((item) => {
+    const matchesSearch =
+      item.title.toLowerCase().includes(search) ||
+      item.description.toLowerCase().includes(search);
+
+    const matchesStatus = !status || item.status === status;
+    const matchesPriority = !priority || item.priority === priority;
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
   const startIndex = (page - 1) * limit;
-  const items = workItems.slice(startIndex, startIndex + limit);
+  const items = filteredItems.slice(startIndex, startIndex + limit);
 
   return res.json({
     items,
     pagination: {
       page,
       limit,
-      total: workItems.length,
-      totalPages: Math.ceil(workItems.length / limit),
+      total: filteredItems.length,
+      totalPages: Math.ceil(filteredItems.length / limit),
     },
   });
 });
