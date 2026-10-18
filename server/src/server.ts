@@ -1,11 +1,13 @@
 import express from "express";
 import cors from "cors";
+import workItemsRouter from "./routes/workItems";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/work-items", workItemsRouter);
 
 app.get("/", (_req, res) => {
   res.json({
