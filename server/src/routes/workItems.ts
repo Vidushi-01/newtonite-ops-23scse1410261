@@ -20,10 +20,24 @@ const createWorkItemSchema = z.object({
 let nextId = 1;
 const workItems: WorkItem[] = [];
 
-router.get("/", (_req, res) => {
-  res.json({
-    items: workItems,
-    total: workItems.length,
+router.get("/", (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(
+    100,
+    Math.max(1, Number(req.query.limit) || 10)
+  );
+
+  const startIndex = (page - 1) * limit;
+  const items = workItems.slice(startIndex, startIndex + limit);
+
+  return res.json({
+    items,
+    pagination: {
+      page,
+      limit,
+      total: workItems.length,
+      totalPages: Math.ceil(workItems.length / limit),
+    },
   });
 });
 
