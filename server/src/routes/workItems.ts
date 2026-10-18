@@ -60,5 +60,54 @@ router.get("/:id", (req, res) => {
 
   return res.json(item);
 });
+const updateWorkItemSchema = z.object({
+  title: z.string().trim().min(3).max(120).optional(),
+  description: z.string().max(2000).optional(),
+  status: z.enum([
+    "Open",
+    "In Progress",
+    "Awaiting Approval",
+    "Resolved",
+    "Closed",
+  ]).optional(),
+  priority: z.enum(["Low", "Medium", "High", "Critical"]).optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: "Provide at least one field to update",
+});
+
+router.patch("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const item = workItems.find((workItem) => workItem.id === id);
+
+  if (!item) {
+    return res.status(404).json({ error: "Work item not found" });
+  }
+
+  const result = updateWorkItemSchema.safeParse(req.body);
+
+  if (!result.success) {
+    return res.status(400).json({
+      error: "Invalid update",
+      details: result.error.issues,
+    });
+  }
+
+  Object.assign(item, result.data);
+
+  return res.json(item);
+});
+
+router.delete("/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const index = workItems.findIndex((workItem) => workItem.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Work item not found" });
+  }
+
+  workItems.splice(index, 1);
+
+  return res.status(204).send();
+});
 
 export default router;
