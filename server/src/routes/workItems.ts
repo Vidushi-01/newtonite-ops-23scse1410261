@@ -74,6 +74,16 @@ const updateWorkItemSchema = z.object({
 }).refine((data) => Object.keys(data).length > 0, {
   message: "Provide at least one field to update",
 });
+const allowedTransitions: Record<
+  WorkItem["status"],
+  WorkItem["status"][]
+> = {
+  "Open": ["In Progress"],
+  "In Progress": ["Open", "Awaiting Approval"],
+  "Awaiting Approval": ["In Progress", "Resolved"],
+  "Resolved": ["Closed", "In Progress"],
+  "Closed": [],
+};
 
 router.patch("/:id", (req, res) => {
   const id = Number(req.params.id);
@@ -92,7 +102,19 @@ router.patch("/:id", (req, res) => {
     });
   }
 
-  Object.assign(item, result.data);
+  const requestedStatus = result.data.status;
+
+if (
+  requestedStatus &&
+  requestedStatus !== item.status &&
+  !allowedTransitions[item.status].includes(requestedStatus)
+) {
+  return res.status(400).json({
+    error: `Cannot change status from ${item.status} to ${requestedStatus}`,
+  });
+}
+
+Object.assign(item, result.data);
 
   return res.json(item);
 });
