@@ -159,7 +159,17 @@ if (
   });
 }
 
+const previousStatus = item.status;
+
 Object.assign(item, result.data);
+
+recordActivity(
+  item.id,
+  "UPDATED",
+  previousStatus !== item.status
+    ? `Status changed from ${previousStatus} to ${item.status}`
+    : "Work item details updated"
+);
 
   return res.json(item);
 });
