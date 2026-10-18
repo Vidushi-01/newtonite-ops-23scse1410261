@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { recordActivity, getActivities } from "../activityLog";
 
 const router = Router();
 
@@ -75,8 +76,23 @@ router.post("/", (req, res) => {
   };
 
   workItems.push(item);
+  recordActivity(item.id, "CREATED", `Work item "${item.title}" was created`);
 
   return res.status(201).json(item);
+});
+
+router.get("/:id/activity", (req, res) => {
+  const id = Number(req.params.id);
+  const item = workItems.find((workItem) => workItem.id === id);
+
+  if (!item) {
+    return res.status(404).json({ error: "Work item not found" });
+  }
+
+  return res.json({
+    workItemId: id,
+    activities: getActivities(id),
+  });
 });
 
 router.get("/:id", (req, res) => {
